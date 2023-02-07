@@ -1,0 +1,41 @@
+''' Maze Game Requirements '''
+
+User selects a level (the higher the level, the higher the difficulty of the maze).
+Level loads three rooms and places the user in a random room.
+User uses arrow keys to move horizontally and vertically through the maze.
+FInd treasure and defeat the enemy in each room.
+Find passageways to be teleported to another room.
+One room contains an exit to leave the maze and complete the game.
+Enemy from each room must be defeated before the exit can be used.
+When user finds an enemy, they must perform the correct action to defeat the enemy.
+If the enemy wins, user starts level again.
+User can find hints on how to defeat an enemy from collecting treasure.
+Find as much treasure as possible to complete  the game with the most possible wealth.
+
+# Types of enemy
+
+- Bear Trap
+- Goblin
+- Wild Boar
+
+# Actions to defeat enemy
+
+- Bear Trap 
+    level 1 : ( hit D within 4 seconds ) 
+    level 2 : ( hit D within 3 seconds ) 
+    level 3 : ( hit D within 2 seconds )
+
+- Goblin, Wild Boar:
+    level 1 : ( hit L 15 times within 10 seconds ) 
+    level 2 : ( hit L 17 times within 10 seconds ) 
+    level 3 : ( hit L 20 times within 10 seconds )
+
+
+# Treasure Value
+
+- Coin
+    level 1 : 100 Gold
+    level 2 : 150 Gold
+    level 3 : 200 Gold
+If all coins from each level is found, total wealth doubles at completion of game.
+

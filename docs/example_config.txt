@@ -1,0 +1,109 @@
+'''Example Configuration File Maze Game'''
+'''Keys:
+    Room: r
+    Entry: rE
+    Exit: rL
+    Treasure: rT
+    Enemy: rD
+    Passage: rP
+    Horizontal Move: ==
+    Vertical Move: ||
+    Intersection: ++
+    Wall: XX
+    Character: CC
+'''
+
+LEVEL 1 
+
+XX XX rE XX || XX
+XX XX || ++ ++ XX
+rP == XX || rD rP
+XX || XX || ++ XX
+XX ++ == ++ ++ rT
+XX XX XX rP XX XX
+
+XX XX XX XX rE ==
+rP == XX == ++ XX
+XX || XX ++ ++ XX
+== ++ XX ++ ++ XX
+XX ++ == ++ rD rL
+XX rT XX rP XX XX
+
+rE XX XX ++ == XX  
+++ ++ XX || XX ||
+XX ++ == rD == ++
+rP == XX XX rT XX
+XX XX ++ == ++ rP
+== == == rP XX XX
+
+LEVEL 2
+
+XX XX XX rE XX XX || ++
+XX ++ == ++ ++ == XX || 
+XX || XX XX || XX XX ||
+XX || XX ++ ++ == rT ||
+rP XX == ++ ++ XX XX ||
+++ == XX || ++ == ++ rP
+XX ++ == ++ rD XX || XX
+== ++ XX || rP XX ++ ==
+
+XX rP XX XX || XX XX ||
+XX ++ == XX || XX ++ rT
+XX || XX == ++ XX || XX
+== ++ ++ == ++ XX ++ rP
+XX ++ XX XX ++ == ++ XX
+XX ++ == == XX XX || XX
+rP == XX XX ++ == == XX
+XX ++ rD == ++ XX rP XX
+
+XX || XX XX XX rP XX ||
+== ++ == ++ XX || ++ ++
+XX || XX || == XX || XX
+rD ++ == || XX == ++ ==
+XX || XX ++ || XX || XX
+XX XX ++ ++ XX XX ++ rP
+rP == ++ XX rT == ++ XX
+XX XX rL XX || XX || XX
+
+LEVEL 3
+
+XX XX XX rP XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX
+XX == == ++ XX XX ++ == ++ == ++ XX ++ == XX ++ == rT XX
+XX XX XX || == == || XX || XX || XX || XX XX || XX XX XX
+XX XX == ++ XX XX || XX || XX || XX || == XX || XX || XX
+XX || ++ || XX == || XX XX XX || XX XX || XX ++ == == rP
+XX || XX || XX XX ++ == == XX == ++ == ++ == == ++ XX XX 
+XX rD XX ++ == ++ || XX || == XX || XX || XX XX || XX XX
+rP ++ XX || XX == ++ == == ++ == || == == == == ++ == XX
+XX XX XX XX == == || XX XX || XX || == XX XX XX || XX ||
+XX || XX || XX XX ++ == == ++ ++ XX || XX || XX || XX ||
+XX ++ == == == == ++ XX XX ++ rL == ++ XX ++ == ++ == ++
+
+XX XX XX XX ++ ++ XX || XX XX rP XX ++ ++ XX XX || XX ||
+== XX XX ++ ++ ++ == ++ XX XX ++ == XX || XX ++ ++ XX ||
+++ ++ XX || XX || XX rT XX ++ == XX XX || XX || XX XX ||
+XX || XX rD XX || XX ++ == == XX XX XX || XX ++ == == ++
+++ ++ == ++ XX XX XX || XX XX ++ == == ++ ++ ++ XX XX XX
+rP XX XX ++ == == == ++ XX ++ ++ XX XX XX || XX XX XX XX 
+XX ++ == ++ XX || XX ++ == || XX XX ++ == ++ == == ++ rP
+XX || XX XX == == XX || XX ++ == == || XX || XX XX || XX
+++ == XX ++ ++ XX XX ++ == ++ XX XX || == || XX XX ++ ++
+|| XX ++ ++ ++ == == XX XX || XX ++ || XX || XX == ++ ++
+XX rP ++ XX || XX XX XX == rP XX || XX XX XX XX XX XX XX
+
+XX XX XX XX || XX XX XX || XX XX XX || XX XX XX rP XX ||
+== ++ XX ++ ++ == ++ XX || XX || XX || XX || XX ++ == ++
+XX || XX || XX XX || XX ++ == ++ == ++ == ++ XX || XX ||
+XX ++ == ++ == XX ++ == ++ XX || XX || XX || XX || XX ||
+rP ++ XX || XX XX || XX ++ ++ == == ++ XX rT == ++ == ++
+++ ++ XX ++ == ++ == XX XX || XX XX XX XX || XX || XX ||
+XX || XX XX XX || XX == == || XX || XX == ++ XX || XX XX
+XX ++ ++ ++ == ++ XX || XX XX XX ++ ++ XX || XX XX XX XX
+XX == ++ XX XX XX XX ++ == rT XX ++ rD XX ++ ++ XX XX rP
+XX XX ++ == == == XX || XX XX ++ ++ XX || XX ++ == ++ ++
+== == ++ XX XX rP XX XX == == ++ XX XX ++ == ++ XX || XX
+
+
+
+
+
