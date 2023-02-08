@@ -3,6 +3,7 @@ import pygame_menu
 import pathlib
 import re
 import random
+import os 
 
 PATH = pathlib.PurePath(__file__).parent
 
@@ -46,7 +47,6 @@ class menu_t:
         except Exception as e:
             diff = 1
         game_t(diff)
-        self.in_menu = False
     
 
 
@@ -85,12 +85,13 @@ class game_t:
         self.room_2 = room_2.readlines()
         self.room_3 = room_3.readlines()
 
-        self.screen_w = len(self.room_1[0].split())*64
         self.screen_h = len(self.room_1)*64
+        self.screen_w = len(self.room_1[0].split())*64
         self.draw_maze(room)
 
 
     def draw_maze(self, room):
+        print(f"Room: {room}")
         # Set screen size and title
         self.screen = pygame.display.set_mode((self.screen_w, self.screen_h))
         pygame.display.set_caption("Maze Game")
@@ -100,12 +101,17 @@ class game_t:
         self.block_image = pygame.image.load(f"{PATH}/../images/brick-wall.png").convert()
         player_image = pygame.image.load(f"{PATH}/../images/player.png").convert()
         self.door_image = pygame.image.load(f"{PATH}/../images/door.png").convert()
+        self.treas_img = pygame.image.load(f"{PATH}/../images/treasure.png").convert()
+        self.enemy_img = pygame.image.load(f"{PATH}/../images/goblin.png").convert()
         self.player = player_t(player_image)
 
         bx = 0
         by = 0
         self.block_rects = []
         self.door_rects = []
+        self.player_rects = []
+        self.treasure_rects = []
+        self.enemy_rects = []
         if room == 1:
             self.current_room = self.room_1
         if room == 2:
@@ -119,10 +125,18 @@ class game_t:
                     self.block_rects.append(pygame.Rect(bx*64, by*64, 64, 64))
                 if s == 'rP':
                     self.door_rects.append(pygame.Rect(bx*64, by*64, 64, 64))
+                if s == 'rE':
+                    self.player_rects.append(pygame.Rect(bx*64, by*64, 32, 32))
+                if s == 'rT':
+                    self.treasure_rects.append(pygame.Rect(bx*64, by*64, 32, 32))
+                if s == 'rD':
+                    self.enemy_rects.append(pygame.Rect(bx*64, by*64, 32, 32))
                 bx += 1
                 if s == '\n':
                     bx = 0
                     by = by + 1
+        self.player.player_rect.x = self.player_rects[0][0]
+        self.player.player_rect.y = self.player_rects[0][1]
         self.run_game()
     
     def run_game(self):         
@@ -177,11 +191,15 @@ class game_t:
 
             # Clear screen and draw player and blocks
             self.screen.fill((234, 210, 168))
-            self.screen.blit(self.player.player, self.player.player_rect)
             for block_rect in self.block_rects:
                 self.screen.blit(self.block_image, block_rect)
             for door in self.door_rects:
                 self.screen.blit(self.door_image, door)
+            for treas in self.treasure_rects:
+                self.screen.blit(self.treas_img, treas)
+            for enemy in self.enemy_rects:
+                self.screen.blit(self.enemy_img, enemy)
+            self.screen.blit(self.player.player, self.player.player_rect)
 
             # Update screen
             pygame.display.update()
@@ -189,7 +207,7 @@ class game_t:
         self.quit_application()
     
     def quit_application(self):
-        pygame.quit()
+        exit()
 
 
 
