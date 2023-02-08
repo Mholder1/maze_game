@@ -3,7 +3,7 @@ import pygame_menu
 import pathlib
 import re
 import random
-import os 
+import os
 
 PATH = pathlib.PurePath(__file__).parent
 
@@ -47,8 +47,6 @@ class menu_t:
         except Exception as e:
             diff = 1
         game_t(diff)
-    
-
 
 class game_t:
     def __init__(self, level):
@@ -91,7 +89,7 @@ class game_t:
 
         self.screen_h = len(self.room_1)*64
         self.screen_w = len(self.room_1[0].split())*64
-        self.draw_maze(self.level, room)
+        self.draw_maze(self.level, 2)
 
 
     def draw_maze(self, level, room):
@@ -99,7 +97,7 @@ class game_t:
         gold_exists = True
         print(f"Room: {room}")
         # Set screen size and title
-        self.screen = pygame.display.set_mode((self.screen_w, self.screen_h+64))
+        self.screen = pygame.display.set_mode((self.screen_w, self.screen_h+128))
         pygame.display.set_caption("Maze Game")
         # Set the clock to control game speed
         self.clock = pygame.time.Clock()
@@ -109,6 +107,7 @@ class game_t:
         self.door_image = pygame.image.load(f"{PATH}/../images/door.png").convert()
         self.treas_img = pygame.image.load(f"{PATH}/../images/treasure.png").convert()
         self.enemy_img = pygame.image.load(f"{PATH}/../images/goblin.png").convert()
+        self.exit_img = pygame.image.load(f"{PATH}/../images/exit.png").convert()
         self.player = player_t(player_image)
 
         bx = 0
@@ -118,6 +117,7 @@ class game_t:
         self.player_rects = []
         self.treasure_rects = []
         self.enemy_rects = []
+        self.complete_game_rect = []
         if room == 1:
             self.current_room = self.room_1
             if self.room_1 in self.monster_killed:
@@ -149,6 +149,8 @@ class game_t:
                     self.treasure_rects.append(pygame.Rect(bx*64, by*64, 32, 32))
                 if s == 'rD' and monster_exists:
                     self.enemy_rects.append(pygame.Rect(bx*64, by*64, 32, 32))
+                if s == 'rL':
+                    self.complete_game_rect.append(pygame.Rect(bx*64, by*64, 64, 64))
                 bx += 1
                 if s == '\n':
                     bx = 0
@@ -187,6 +189,10 @@ class game_t:
         text = font.render(msg, True, (0,0,255))
         self.screen.blit(text, (10, self.screen_h + count))
 
+    def completed_game(self, wealth):
+        self.screen = pygame.display.set_mode((self.screen_w, self.screen_h+128))
+        pygame.display.set_caption("Maze Game")
+        self.show_text("Wealth Found", 0)
         
     def run_game(self):         
         # Define game loop
@@ -248,6 +254,11 @@ class game_t:
                 self.enemy_rects.remove(self.enemy_rects[0])
                 self.monster_killed.append(self.current_room)
 
+            if self.player.player_rect.collidelistall(self.complete_game_rect):
+                if self.enemy_count == 0:
+                    self.show_text(f"All enemies must be defeated before you leave.", 60)
+                    self.completed_game(self.wealth)
+
             # Clear screen and draw player and blocks
             self.screen.fill((234, 210, 168))
             for block_rect in self.block_rects:
@@ -258,6 +269,8 @@ class game_t:
                 self.screen.blit(self.treas_img, treas)
             for enemy in self.enemy_rects:
                 self.screen.blit(self.enemy_img, enemy)
+            for exit in self.complete_game_rect:
+                self.screen.blit(self.exit_img, exit)
             self.screen.blit(self.player.player, self.player.player_rect)
             self.show_text(f"Wealth: {self.wealth}g", 10)
             self.show_text(f"Enemies remaining: {self.enemy_count}", 30)
@@ -268,8 +281,6 @@ class game_t:
     
     def quit_application(self):
         exit()
-
-
 
 if __name__ == '__main__':
     menu_t()
