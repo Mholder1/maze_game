@@ -11,8 +11,8 @@ class player_t:
     def __init__(self, player_image):
         # Set starting position for player
         self.player_rect = player_image.get_rect()
-        self.player_rect.x = 270
-        self.player_rect.y = 50
+        self.player_rect.x = 0
+        self.player_rect.y = 0
         self.player = player_image
 
 class menu_t:
@@ -26,7 +26,7 @@ class menu_t:
             self.menu = pygame_menu.Menu('Welcome', 600, 400,
                             theme=pygame_menu.themes.THEME_ORANGE)
 
-            self.menu.add.text_input('Name :', default='John Doe')
+            self.menu.add.text_input('Name :')
             self.menu.add.selector('Difficulty :', [('Easy', 1), ('Medium', 2), ('Hard', 3)], 
                                 onchange=self.set_difficulty)
             self.menu.add.button('Play', self.start_the_game)
@@ -54,6 +54,10 @@ class game_t:
     def __init__(self, level):
         # Initialize Pygame
         self.level = level
+        self.wealth = 0
+        self.enemy_count = 3
+        self.monster_killed = []
+        self.gold_collected = []
         self.setup_maze(self.level, 1)
     
     def check_move_valid(self, x_pos, y_pos, btn):
@@ -87,13 +91,15 @@ class game_t:
 
         self.screen_h = len(self.room_1)*64
         self.screen_w = len(self.room_1[0].split())*64
-        self.draw_maze(room)
+        self.draw_maze(self.level, room)
 
 
-    def draw_maze(self, room):
+    def draw_maze(self, level, room):
+        monster_exists = True
+        gold_exists = True
         print(f"Room: {room}")
         # Set screen size and title
-        self.screen = pygame.display.set_mode((self.screen_w, self.screen_h))
+        self.screen = pygame.display.set_mode((self.screen_w, self.screen_h+64))
         pygame.display.set_caption("Maze Game")
         # Set the clock to control game speed
         self.clock = pygame.time.Clock()
@@ -114,31 +120,74 @@ class game_t:
         self.enemy_rects = []
         if room == 1:
             self.current_room = self.room_1
+            if self.room_1 in self.monster_killed:
+                monster_exists = False
+            if self.room_1 in self.gold_collected:
+                gold_exists = False
         if room == 2:
             self.current_room = self.room_2
+            if self.room_2 in self.monster_killed:
+                monster_exists = False
+            if self.room_2 in self.gold_collected:
+                gold_exists = False
         if room == 3:
             self.current_room = self.room_3
+            if self.room_3 in self.monster_killed:
+                monster_exists = False
+            if self.room_3 in self.gold_collected:
+                gold_exists = False
         for i in self.current_room:
             symbols = re.findall(r'\S+|[^\S ]+', i)
             for s in symbols:
                 if s == 'XX':
                     self.block_rects.append(pygame.Rect(bx*64, by*64, 64, 64))
-                if s == 'rP':
+                if s == 'rP' or s == 'rE':
                     self.door_rects.append(pygame.Rect(bx*64, by*64, 64, 64))
                 if s == 'rE':
                     self.player_rects.append(pygame.Rect(bx*64, by*64, 32, 32))
-                if s == 'rT':
+                if s == 'rT' and gold_exists:
                     self.treasure_rects.append(pygame.Rect(bx*64, by*64, 32, 32))
-                if s == 'rD':
+                if s == 'rD' and monster_exists:
                     self.enemy_rects.append(pygame.Rect(bx*64, by*64, 32, 32))
                 bx += 1
                 if s == '\n':
                     bx = 0
                     by = by + 1
-        self.player.player_rect.x = self.player_rects[0][0]
-        self.player.player_rect.y = self.player_rects[0][1]
+        
+        y_pos = self.player_rects[0][1]
+        x_pos = self.player_rects[0][0]
+        if x_pos >= (self.screen_w - 64) and y_pos >= (self.screen_h - 64):
+            self.player.player_rect.x = x_pos - 64
+            self.player.player_rect.y = y_pos - 64
+        elif y_pos >= (self.screen_h - 64):
+            self.player.player_rect.x = x_pos
+            self.player.player_rect.y = y_pos - 64
+        elif x_pos == 0 and y_pos == 0:
+            self.player.player_rect.x = x_pos
+            self.player.player_rect.y = y_pos + 64
+        elif x_pos > (self.screen_w - 64):
+            self.player.player_rect.x = x_pos - 64
+            self.player.player_rect.y = y_pos
+        elif y_pos == 0:
+            self.player.player_rect.x = x_pos
+            self.player.player_rect.y = y_pos + 64
+        elif x_pos == 0:
+            self.player.player_rect.x = x_pos + 64
+            self.player.player_rect.y = y_pos
+        elif level == 3:
+            self.player.player_rect.x = x_pos - 64
+            self.player.player_rect.y = y_pos
+        elif level == 1:
+            self.player.player_rect.x = x_pos
+            self.player.player_rect.y = y_pos
         self.run_game()
     
+    def show_text(self, msg, count):
+        font = pygame.font.SysFont(None, 25)
+        text = font.render(msg, True, (0,0,255))
+        self.screen.blit(text, (10, self.screen_h + count))
+
+        
     def run_game(self):         
         # Define game loop
         running = True
@@ -183,11 +232,21 @@ class game_t:
             
             if self.player.player_rect.collidelistall(self.door_rects):
                 if self.current_room == self.room_1:
-                    self.draw_maze(2)
+                    self.draw_maze(self.level, 2)
                 elif self.current_room == self.room_2:
-                    self.draw_maze(3)
+                    self.draw_maze(self.level, 3)
                 elif self.current_room == self.room_3:
-                    self.draw_maze(1)
+                    self.draw_maze(self.level, 1)
+            
+            if self.player.player_rect.collidelistall(self.treasure_rects):
+                self.wealth += 100
+                self.treasure_rects.remove(self.treasure_rects[0])
+                self.gold_collected.append(self.current_room)
+            
+            if self.player.player_rect.collidelistall(self.enemy_rects):
+                self.enemy_count -= 1
+                self.enemy_rects.remove(self.enemy_rects[0])
+                self.monster_killed.append(self.current_room)
 
             # Clear screen and draw player and blocks
             self.screen.fill((234, 210, 168))
@@ -200,7 +259,8 @@ class game_t:
             for enemy in self.enemy_rects:
                 self.screen.blit(self.enemy_img, enemy)
             self.screen.blit(self.player.player, self.player.player_rect)
-
+            self.show_text(f"Wealth: {self.wealth}g", 10)
+            self.show_text(f"Enemies remaining: {self.enemy_count}", 30)
             # Update screen
             pygame.display.update()
             self.clock.tick(60)
