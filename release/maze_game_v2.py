@@ -34,8 +34,10 @@ class menu_t:
                                 onchange=self.set_difficulty)
             self.menu.add.button('Play', self.start_the_game)
             self.menu.add.button('Quit', pygame_menu.events.EXIT)
-
-            self.menu.mainloop(self.surface)
+            try:
+                self.menu.mainloop(self.surface)
+            except:
+                exit()
 
     def set_difficulty(self, value, difficulty):
         self.level = difficulty
@@ -47,6 +49,18 @@ class menu_t:
         except Exception as e:
             diff = 1
         game_t(diff)
+
+class button_t:
+    def __init__(self, screen, width, height, func):
+        self.button = Button(screen,
+                        width - 150, height + 10,
+                        125, 50,
+                        text="Restart Game", fontSize=25,
+                        inactiveColour=(200, 50, 0),
+                        hoverColour=(150, 0, 0),
+                        pressedColour=(0, 200, 20),
+                        radius=20,
+                        onClick=func)
 
 class game_t:
     def __init__(self, level):
@@ -104,15 +118,11 @@ class game_t:
         print(f"Room: {room}")
         # Set screen size and title
         self.screen = pygame.display.set_mode((self.screen_w, self.screen_h+128))
-        self.button = Button(self.screen,
-                            self.screen_w - 150, self.screen_h + 10,
-                            125, 50,
-                            text="Restart Game", fontSize=25,
-                            inactiveColour=(200, 50, 0),
-                            hoverColour=(150, 0, 0),
-                            pressedColour=(0, 200, 20),
-                            radius=20,
-                            onClick=self.restart_game)
+        try:
+            pygame_widgets.WidgetHandler.removeWidget(btn)
+        except Exception as e:
+            print(e)
+        btn = button_t(self.screen, self.screen_h, self.screen_w, self.restart_game)
         pygame.display.set_caption("Maze Game")
         # Set the clock to control game speed
         self.clock = pygame.time.Clock()
@@ -191,9 +201,6 @@ class game_t:
     def restart_game(self):
         self._running = False
         game_t(self.level)
-
-    def pop_up_message(self):
-        pyautogui.alert("you have done this")
     
     def show_text(self, msg, count):
         font = pygame.font.SysFont(None, 25)
@@ -245,6 +252,10 @@ class game_t:
         while pygame.time.get_ticks()-timer<1000:
             self.show_text(f"The door doesn't open.", 60)
             pygame.display.update()
+    
+    def go_home(self):
+        self._running = False
+        menu_t()
 
     def completed_game(self, wealth):
         screen = pygame.display.set_mode((600, 400))
@@ -252,7 +263,8 @@ class game_t:
         summary = pygame_menu.Menu(f"Congratulations!", 600, 400,
                         theme=pygame_menu.themes.THEME_ORANGE)
         summary.add.label(title=f"You finished the maze with {wealth} gold.")
-        summary.add.button('Play Again', menu_t)
+        summary.add.button('Restart', self.restart_game)
+        summary.add.button('Home', self.go_home)
         summary.add.button('Quit', pygame_menu.events.EXIT)
         pygame.display.update()
         try:
@@ -266,8 +278,8 @@ class game_t:
         self._running = True
         while self._running:
             # Handle events
-            events = pygame.event.get()
-            for event in events:
+            self.events = pygame.event.get()
+            for event in self.events:
                 if event.type == pygame.QUIT:
                     self._running = False
                 if event.type == pygame.KEYUP and self.wealth > 0:
@@ -376,7 +388,7 @@ class game_t:
             for enemy in self.enemy_rects:
                 self.screen.blit(self.enemy_img, enemy)
             for exit_d in self.complete_game_rect:
-                self.screen.blit(self.exit_img, exit_d)
+                self.screen.blit(self.door_image, exit_d)
             if self.current_room == self.room_1:
                 for coin in self.room_one_coins:
                     self.screen.blit(self.coin_img, coin)
@@ -390,10 +402,10 @@ class game_t:
             self.show_text(f"Wealth: {self.wealth}g", 10)
             self.show_text(f"Enemies remaining: {self.enemy_count}", 30)
             # Update screen
-            pygame_widgets.update(events)
+            pygame_widgets.update(self.events)
             pygame.display.update()
             self.clock.tick(60)
-        exit()
+        pygame.quit()
 
 if __name__ == '__main__':
     menu_t()
