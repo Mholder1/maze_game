@@ -4,6 +4,9 @@ import pathlib
 import re
 import random
 import os
+from pgu import gui
+import time
+import pyautogui
 
 PATH = pathlib.PurePath(__file__).parent
 
@@ -25,17 +28,13 @@ class menu_t:
 
             self.menu = pygame_menu.Menu('Welcome', 600, 400,
                             theme=pygame_menu.themes.THEME_ORANGE)
-
-            self.menu.add.text_input('Name :')
             self.menu.add.selector('Difficulty :', [('Easy', 1), ('Medium', 2), ('Hard', 3)], 
                                 onchange=self.set_difficulty)
             self.menu.add.button('Play', self.start_the_game)
             self.menu.add.button('Quit', pygame_menu.events.EXIT)
-            try:
-                self.menu.mainloop(self.surface)
-            except Exception as e:
-                print(e)
-                pygame_menu.events.EXIT
+
+            self.menu.mainloop(self.surface)
+
     
     def set_difficulty(self, value, difficulty):
         self.level = difficulty
@@ -48,6 +47,23 @@ class menu_t:
             diff = 1
         game_t(diff)
 
+class pop_up_t(gui.Dialog):
+    def __init__(self, value, **params):
+        gui.Desktop()
+        title = gui.Label("Woops!")
+        main = gui.Table(width=300, height=400)
+        label = gui.Label(value)
+
+        btn = gui.Button("Ok")
+        btn.connect(gui.CLICK, self.close, None)
+
+        main.tr()
+        main.td(label)
+        main.tr()
+        main.tr()
+        main.td(btn)
+        gui.Dialog.__init__(self, title, main)
+
 class game_t:
     def __init__(self, level):
         # Initialize Pygame
@@ -56,8 +72,13 @@ class game_t:
         self.enemy_count = 3
         self.monster_killed = []
         self.gold_collected = []
+        self.app = gui.App()
+        self.dialog = pop_up_t("#00ffff")
+        self.app.init(self.dialog)
+        self.text_pos_and_time = []
+        self.pop_up_seconds = 1
         self.setup_maze(self.level, 1)
-    
+
     def check_move_valid(self, x_pos, y_pos, btn):
         if x_pos >= (self.screen_w - 32) and btn == "RIGHT":
             return False
@@ -97,7 +118,7 @@ class game_t:
         gold_exists = True
         print(f"Room: {room}")
         # Set screen size and title
-        self.screen = pygame.display.set_mode((self.screen_w, self.screen_h+128))
+        self.screen = pygame.display.set_mode((self.screen_w, self.screen_h+64))
         pygame.display.set_caption("Maze Game")
         # Set the clock to control game speed
         self.clock = pygame.time.Clock()
@@ -109,7 +130,7 @@ class game_t:
         self.enemy_img = pygame.image.load(f"{PATH}/../images/goblin.png").convert()
         self.exit_img = pygame.image.load(f"{PATH}/../images/exit.png").convert()
         self.player = player_t(player_image)
-
+        
         bx = 0
         by = 0
         self.block_rects = []
@@ -184,15 +205,60 @@ class game_t:
             self.player.player_rect.y = y_pos
         self.run_game()
     
+    def pop_up_message(self):
+        pyautogui.alert("you have done this")
+    
     def show_text(self, msg, count):
-        font = pygame.font.SysFont(None, 25)
-        text = font.render(msg, True, (0,0,255))
+        self.font = pygame.font.SysFont(None, 25)
+        text = self.font.render(msg, True, (0,0,255))
         self.screen.blit(text, (10, self.screen_h + count))
+    
+    def render_text(self, msg, font_size):
+        font = pygame.font.SysFont(None, font_size)
+        return font.render(msg, True, (0,0,255))
+
+    def enemy_encounter(self):
+        self.fight_screen = pygame.display.set_mode((self.screen_w, self.screen_h + 64))
+        self.fight_screen.fill((234, 210, 168))
+        pygame.display.set_caption("Enemy Found")
+        self.fight_screen.blit(self.enemy_img, (self.screen_w / 2, self.screen_h / 2))
+        self.fight_screen.blit(self.player.player, (self.screen_w / 3, self.screen_h / 2))
+        timer = pygame.time.get_ticks()
+        counter = 0
+        while pygame.time.get_ticks()-timer<7000:
+            if self.level == 1:
+                self.fight_screen.blit(self.render_text("Press left mouse key as fast as you can!", 28), 
+                                    (0, 40))
+            if self.level == 2:
+                self.fight_screen.blit(self.render_text("Press left mouse key as fast as you can!", 30), 
+                                    (self.screen_w / 10, 40))
+            if self.level == 3:
+                self.fight_screen.blit(self.render_text("Press left mouse key as fast as you can!", 45), 
+                                    (self.screen_w / 4, 40))
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    counter += 1
+                    print(counter)
+            if counter == 10:
+                return True
+            pygame.display.update()
+        return False
+
 
     def completed_game(self, wealth):
-        self.screen = pygame.display.set_mode((self.screen_w, self.screen_h+128))
+        screen = pygame.display.set_mode((600, 400))
         pygame.display.set_caption("Maze Game")
-        self.show_text("Wealth Found", 0)
+        summary = pygame_menu.Menu(f"Congratulations!", 600, 400,
+                        theme=pygame_menu.themes.THEME_ORANGE)
+        summary.add.label(title=f"You finished the maze with {wealth} gold.")
+        summary.add.button('Play Again', menu_t)
+        summary.add.button('Quit', pygame_menu.events.EXIT)
+        pygame.display.update()
+        try:
+            summary.mainloop(screen)
+        except Exception as e:
+            print("in completed game error: ", e)
+            pygame_menu.events.EXIT
         
     def run_game(self):         
         # Define game loop
@@ -249,14 +315,17 @@ class game_t:
                 self.treasure_rects.remove(self.treasure_rects[0])
                 self.gold_collected.append(self.current_room)
             
+            #if user encounters an enemy
             if self.player.player_rect.collidelistall(self.enemy_rects):
-                self.enemy_count -= 1
-                self.enemy_rects.remove(self.enemy_rects[0])
-                self.monster_killed.append(self.current_room)
+                if self.enemy_encounter():
+                    self.enemy_count -= 1
+                    self.enemy_rects.remove(self.enemy_rects[0])
+                    self.monster_killed.append(self.current_room)
+                
 
+            #if user enters exit door
             if self.player.player_rect.collidelistall(self.complete_game_rect):
                 if self.enemy_count == 0:
-                    self.show_text(f"All enemies must be defeated before you leave.", 60)
                     self.completed_game(self.wealth)
 
             # Clear screen and draw player and blocks
@@ -269,17 +338,14 @@ class game_t:
                 self.screen.blit(self.treas_img, treas)
             for enemy in self.enemy_rects:
                 self.screen.blit(self.enemy_img, enemy)
-            for exit in self.complete_game_rect:
-                self.screen.blit(self.exit_img, exit)
+            for exit_d in self.complete_game_rect:
+                self.screen.blit(self.exit_img, exit_d)
             self.screen.blit(self.player.player, self.player.player_rect)
             self.show_text(f"Wealth: {self.wealth}g", 10)
             self.show_text(f"Enemies remaining: {self.enemy_count}", 30)
             # Update screen
             pygame.display.update()
             self.clock.tick(60)
-        self.quit_application()
-    
-    def quit_application(self):
         exit()
 
 if __name__ == '__main__':
