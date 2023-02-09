@@ -7,6 +7,8 @@ import os
 from pgu import gui
 import time
 import pyautogui
+import pygame_widgets
+from pygame_widgets.button import Button
 
 PATH = pathlib.PurePath(__file__).parent
 
@@ -35,7 +37,6 @@ class menu_t:
 
             self.menu.mainloop(self.surface)
 
-    
     def set_difficulty(self, value, difficulty):
         self.level = difficulty
         return self.level
@@ -47,23 +48,6 @@ class menu_t:
             diff = 1
         game_t(diff)
 
-class pop_up_t(gui.Dialog):
-    def __init__(self, value, **params):
-        gui.Desktop()
-        title = gui.Label("Woops!")
-        main = gui.Table(width=300, height=400)
-        label = gui.Label(value)
-
-        btn = gui.Button("Ok")
-        btn.connect(gui.CLICK, self.close, None)
-
-        main.tr()
-        main.td(label)
-        main.tr()
-        main.tr()
-        main.td(btn)
-        gui.Dialog.__init__(self, title, main)
-
 class game_t:
     def __init__(self, level):
         # Initialize Pygame
@@ -72,9 +56,6 @@ class game_t:
         self.enemy_count = 3
         self.monster_killed = []
         self.gold_collected = []
-        self.app = gui.App()
-        self.dialog = pop_up_t("#00ffff")
-        self.app.init(self.dialog)
         self.text_pos_and_time = []
         self.pop_up_seconds = 1
         self.setup_maze(self.level, 1)
@@ -123,6 +104,15 @@ class game_t:
         print(f"Room: {room}")
         # Set screen size and title
         self.screen = pygame.display.set_mode((self.screen_w, self.screen_h+128))
+        self.button = Button(self.screen,
+                            self.screen_w - 150, self.screen_h + 10,
+                            125, 50,
+                            text="Restart Game", fontSize=25,
+                            inactiveColour=(200, 50, 0),
+                            hoverColour=(150, 0, 0),
+                            pressedColour=(0, 200, 20),
+                            radius=20,
+                            onClick=self.restart_game)
         pygame.display.set_caption("Maze Game")
         # Set the clock to control game speed
         self.clock = pygame.time.Clock()
@@ -198,6 +188,10 @@ class game_t:
         self.player.player_rect.y = y_pos
         self.run_game()
     
+    def restart_game(self):
+        self._running = False
+        game_t(self.level)
+
     def pop_up_message(self):
         pyautogui.alert("you have done this")
     
@@ -269,12 +263,13 @@ class game_t:
         
     def run_game(self):         
         # Define game loop
-        running = True
-        while running:
+        self._running = True
+        while self._running:
             # Handle events
-            for event in pygame.event.get():
+            events = pygame.event.get()
+            for event in events:
                 if event.type == pygame.QUIT:
-                    running = False
+                    self._running = False
                 if event.type == pygame.KEYUP and self.wealth > 0:
                     if event.key == pygame.K_c and self.current_room == self.room_1:
                         self.room_one_coins.append(pygame.Rect(self.player.player_rect.x, 
@@ -288,6 +283,7 @@ class game_t:
                         self.room_three_coins.append(pygame.Rect(self.player.player_rect.x, 
                                                     self.player.player_rect.y, 32, 32))
                         self.wealth -= 1
+                
             # Handle player movement
             keys = pygame.key.get_pressed()
             if keys[pygame.K_UP]:
@@ -394,6 +390,7 @@ class game_t:
             self.show_text(f"Wealth: {self.wealth}g", 10)
             self.show_text(f"Enemies remaining: {self.enemy_count}", 30)
             # Update screen
+            pygame_widgets.update(events)
             pygame.display.update()
             self.clock.tick(60)
         exit()
