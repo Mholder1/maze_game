@@ -1,16 +1,17 @@
 ''' Maze Game Requirements '''
 
 User selects a level (the higher the level, the higher the difficulty of the maze).
-Level loads three rooms and places the user in a random room.
+Level loads three rooms and places the user in the first level.
 User uses arrow keys to move horizontally and vertically through the maze.
-FInd treasure and defeat the enemy in each room.
-Find passageways to be teleported to another room.
+Find treasure and defeat the enemy in each room.
+Find passageways to be teleported to a different room.
 One room contains an exit to leave the maze and complete the game.
-Enemy from each room must be defeated before the exit can be used.
-When user finds an enemy, they must perform the correct action to defeat the enemy.
-If the enemy wins, user starts level again.
-User can find hints on how to defeat an enemy from collecting treasure.
+Enemy from each room must be defeated before the room can be left.
+When user finds an enemy, they must perform an action to defeat the enemy.
+If the enemy wins, the user must fight them again.
 Find as much treasure as possible to complete  the game with the most possible wealth.
+User can drop coins to use as markers to detect a room they have been in already.
+User can restart the game at any point and be reset to original starting position.
 
 # Types of enemy
 

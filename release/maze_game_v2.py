@@ -3,14 +3,24 @@ import pygame_menu
 import pathlib
 import re
 import random
-import os
 from pgu import gui
-import time
-import pyautogui
 import pygame_widgets
 from pygame_widgets.button import Button
-
 PATH = pathlib.PurePath(__file__).parent
+
+L1_R1 = f"{PATH}/../levels/level_1/room_1"
+L1_R2 = f"{PATH}/../levels/level_1/room_2"
+L1_R3 = f"{PATH}/../levels/level_1/room_3"
+
+L2_R1 = f"{PATH}/../levels/level_2/room_1"
+L2_R2 = f"{PATH}/../levels/level_2/room_2"
+L2_R3 = f"{PATH}/../levels/level_2/room_3"
+
+L3_R1 = f"{PATH}/../levels/level_3/room_1"
+L3_R2 = f"{PATH}/../levels/level_3/room_2"
+L3_R3 = f"{PATH}/../levels/level_3/room_3"
+
+LIST_CONFS = [L1_R1, L1_R2, L1_R3, L2_R1, L2_R2, L2_R3, L3_R1, L3_R2, L3_R3]
 
 class player_t:
     def __init__(self, player_image):
@@ -36,7 +46,8 @@ class menu_t:
             self.menu.add.button('Quit', pygame_menu.events.EXIT)
             try:
                 self.menu.mainloop(self.surface)
-            except:
+            except Exception as e:
+                print(e)
                 exit()
 
     def set_difficulty(self, value, difficulty):
@@ -55,7 +66,7 @@ class button_t:
         self.button = Button(screen,
                         width - 150, height + 10,
                         125, 50,
-                        text="Restart Game", fontSize=25,
+                        text="Restart", fontSize=25,
                         inactiveColour=(200, 50, 0),
                         hoverColour=(150, 0, 0),
                         pressedColour=(0, 200, 20),
@@ -72,7 +83,19 @@ class game_t:
         self.gold_collected = []
         self.text_pos_and_time = []
         self.pop_up_seconds = 1
-        self.setup_maze(self.level, 1)
+        if self.check_configs_valid(LIST_CONFS):
+            self.setup_maze(self.level)
+        else:
+            no_conf_surf = pygame.display.set_mode((600, 400))
+            no_conf_menu = pygame_menu.Menu('Error', 600, 400,
+                            theme=pygame_menu.themes.THEME_ORANGE)
+            no_conf_menu.add.label("One or more configuration files are invalid.")
+            no_conf_menu.add.button('Quit', pygame_menu.events.EXIT)
+            try:
+                no_conf_menu.mainloop(no_conf_surf)
+            except Exception as e:
+                print(e)
+                exit()
 
     def check_move_valid(self, x_pos, y_pos, btn):
         if x_pos >= (self.screen_w - 32) and btn == "RIGHT":
@@ -84,24 +107,52 @@ class game_t:
         if y_pos <= 0 and btn == "UP":
             return False
         return True
-
-    def setup_maze(self, level, room):
+    
+    def check_configs_valid(self, confs):
+        list_of_symbols = ['XX', 'rN', 'r1', 'r2', 'r3', '||', '++', '==', 'rT', 'rD', '\n', 'rL']
+        for conf in confs:
+            lengths = []
+            f = open(conf)
+            file_to_check = f.readlines()
+            for s in file_to_check:
+                symbols = re.findall(r'\S+|[^\S ]+', s)
+                lengths.append(len(symbols))
+                for i in symbols:
+                    if i not in list_of_symbols:
+                        f.close()
+                        return False
+            last_item = len(lengths)-1
+            for index, l in enumerate(lengths):
+                if index == last_item:
+                    f.close()
+                    break
+                compare = lengths[index+1]
+                if l != compare:
+                    f.close()
+                    return False
+                f.close()
+        return True
+    
+    def setup_maze(self, level):
         if level == 1:
-            room_1 = open(f"{PATH}/../levels/level_1/room_1")
-            room_2 = open(f"{PATH}/../levels/level_1/room_2")
-            room_3 = open(f"{PATH}/../levels/level_1/room_3")
+            room_1 = open(L1_R1)
+            room_2 = open(L1_R2)
+            room_3 = open(L1_R3)
         elif level == 2:
-            room_1 = open(f"{PATH}/../levels/level_2/room_1")
-            room_2 = open(f"{PATH}/../levels/level_2/room_2")
-            room_3 = open(f"{PATH}/../levels/level_2/room_3")
+            room_1 = open(L2_R1)
+            room_2 = open(L2_R2)
+            room_3 = open(L2_R3)
         elif level == 3:
-            room_1 = open(f"{PATH}/../levels/level_3/room_1")
-            room_2 = open(f"{PATH}/../levels/level_3/room_2")
-            room_3 = open(f"{PATH}/../levels/level_3/room_3")
+            room_1 = open(L3_R1)
+            room_2 = open(L3_R2)
+            room_3 = open(L3_R3)
 
         self.room_1 = room_1.readlines()
         self.room_2 = room_2.readlines()
         self.room_3 = room_3.readlines()
+        room_1.close()
+        room_2.close()
+        room_3.close()
 
         self.screen_h = len(self.room_1)*64
         self.screen_w = len(self.room_1[0].split())*64
@@ -110,7 +161,6 @@ class game_t:
         self.room_three_coins = []
         self.draw_maze(self.level, 1)
 
-
     def draw_maze(self, level, room):
         ran = random.randrange(0, 6)
         monster_exists = True
@@ -118,11 +168,7 @@ class game_t:
         print(f"Room: {room}")
         # Set screen size and title
         self.screen = pygame.display.set_mode((self.screen_w, self.screen_h+128))
-        try:
-            pygame_widgets.WidgetHandler.removeWidget(btn)
-        except Exception as e:
-            print(e)
-        btn = button_t(self.screen, self.screen_h, self.screen_w, self.restart_game)
+        btn = button_t(self.screen, self.screen_w, self.screen_h, self.restart_game)
         pygame.display.set_caption("Maze Game")
         # Set the clock to control game speed
         self.clock = pygame.time.Clock()
@@ -214,7 +260,6 @@ class game_t:
     def enemy_encounter(self):
         self.fight_screen = pygame.display.set_mode((self.screen_w, self.screen_h + 128))
         self.fight_screen.fill((234, 210, 168))
-        pygame.display.set_caption("Enemy Found")
         self.fight_screen.blit(self.enemy_img, (self.screen_w / 2, self.screen_h / 2))
         self.fight_screen.blit(self.player.player, (self.screen_w / 3, self.screen_h / 2))
         timer = pygame.time.get_ticks()
@@ -264,7 +309,7 @@ class game_t:
                         theme=pygame_menu.themes.THEME_ORANGE)
         summary.add.label(title=f"You finished the maze with {wealth} gold.")
         summary.add.button('Restart', self.restart_game)
-        summary.add.button('Home', self.go_home)
+        # summary.add.button('Home', self.go_home)
         summary.add.button('Quit', pygame_menu.events.EXIT)
         pygame.display.update()
         try:
@@ -333,14 +378,20 @@ class game_t:
             if self.player.player_rect.collidelistall(self.room_one_rects):
                 if keys[pygame.K_SPACE] and self.room_2 in self.monster_killed:
                     self.draw_maze(self.level, 1)
+                elif keys[pygame.K_SPACE] and self.room_2 not in self.monster_killed:
+                    self.door_not_open()
 
             if self.player.player_rect.collidelistall(self.room_two_rects):
                 if keys[pygame.K_SPACE] and self.room_1 in self.monster_killed:
                     self.draw_maze(self.level, 2)
+                elif keys[pygame.K_SPACE] and self.room_1 not in self.monster_killed:
+                    self.door_not_open()
 
             if self.player.player_rect.collidelistall(self.room_three_rects):
                 if keys[pygame.K_SPACE] and self.room_2 in self.monster_killed:
                     self.draw_maze(self.level, 3)
+                elif keys[pygame.K_SPACE] and self.room_2 not in self.monster_killed:
+                    self.door_not_open()
             
             if self.player.player_rect.collidelistall(self.fake_door_rects):
                 if keys[pygame.K_SPACE]:
@@ -362,7 +413,6 @@ class game_t:
                     else:
                         self.enemy_defeated(False)
                 
-
             #if user enters exit door
             if self.player.player_rect.collidelistall(self.complete_game_rect):
                 if keys[pygame.K_SPACE]:
